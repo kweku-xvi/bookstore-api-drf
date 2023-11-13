@@ -1,0 +1,1 @@
+bookstore-api-drf is a django rest framework (drf) repository that provides a robust and scalable backend api solution for managing bookstore operations, including book catalog, user authentication, and order processing
