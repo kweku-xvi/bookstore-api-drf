@@ -21,7 +21,11 @@ class Book(models.Model):
     date_published = models.DateField()
     cover_image = models.ImageField(blank=True, null=True)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ['-created_at']
 
