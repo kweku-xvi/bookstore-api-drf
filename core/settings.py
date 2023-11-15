@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'accounts',
     'authors',
     'books',
+    'feedback',
     'rest_framework',
 ]
 
