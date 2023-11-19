@@ -147,3 +147,5 @@ def delete_book_view(request, book_isbn):
                 'message':'The book has been deleted'
             }, status=status.HTTP_204_NO_CONTENT
         )
+
+# REFACTOR CODE 
