@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
 
-def get_book(book_isbn):
+def get_book(request, book_isbn):
     try:
         book = Book.objects.get(isbn=book_isbn)
     except Book.DoesNotExist:
@@ -22,7 +22,7 @@ def get_book(book_isbn):
     return book
 
 
-def get_feedback(feedback_id):
+def get_feedback(request, feedback_id):
     try:
         feedback = Feedback.objects.get(id=feedback_id)
     except Feedback.DoesNotExist:
