@@ -1,5 +1,5 @@
 from .models import Book
-from .serializers import BookSerializer, UpdateBookSerializer
+from .serializers import BookSerializer
 from authors.models import Author
 from django.shortcuts import render
 from rest_framework import status
@@ -8,19 +8,35 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 
-@api_view(['POST'])
-@permission_classes([IsAdminUser])
-def add_book_view(request, author_id):
+def get_book(book_isbn):
     try:
-        book_author = Author.objects.get(id=author_id)
-    except Author.DoesNotExist:
+        book = Book.objects.get(isbn=book_isbn)
+        return book 
+    except Book.DoesNotExist:
         return Response(
             {
-                'message':'The author does not exist'
+                'message':'This book does not exist'
             }, status=status.HTTP_404_NOT_FOUND
         )
 
+
+def get_author(author_id):
+    try:
+        author = Author.objects.get(id=author_id)
+        return author
+    except Author.DoesNotExist:
+        return Response(
+            {
+                'message':'This author does not exist'
+            }, status=status.HTTP_404_NOT_FOUND
+        )
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def add_book_view(request, author_id):
     if request.method == 'POST':
+        book_author = get_author(author_id)
+        
         serializer = BookSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -30,8 +46,6 @@ def add_book_view(request, author_id):
                 {
                     'success':True,
                     'data':serializer.data,
-                    'author_id':book_author.id,
-                    'author_name':book_author.name,
                 }, status=status.HTTP_201_CREATED
             )
         return Response(
@@ -45,24 +59,15 @@ def add_book_view(request, author_id):
 @api_view(['GET'])
 @authentication_classes([])
 def retrieve_book_view(request, book_isbn):
-    try:
-        book = Book.objects.get(isbn=book_isbn)
-    except Book.DoesNotExist:
-        return Response(
-            {
-                'message':'The book does not exist'
-            }
-        )
-
     if request.method == 'GET':
+        book = get_book(book_isbn)
+
         serializer = BookSerializer(book)
 
         return Response(
             {
                 'success':True,
                 'data':serializer.data,
-                'author_id':book.author.id,
-                'author_name':book.author.name,
             }, status=status.HTTP_200_OK
         )
 
@@ -70,16 +75,9 @@ def retrieve_book_view(request, book_isbn):
 @api_view(['GET'])
 @authentication_classes([])
 def retrieve_books_by_author(request, author_id):
-    try:
-        author = Author.objects.get(id=author_id)
-    except Author.DoesNotExist:
-        return Response(
-            {
-                'message':'This author does not exist'
-            }, status=status.HTTP_404_NOT_FOUND
-        )
-
     if request.method == 'GET':
+        author = get_author(author_id)
+
         books = Book.objects.filter(author=author)
 
         serializer = BookSerializer(books, many=True)
@@ -87,25 +85,18 @@ def retrieve_books_by_author(request, author_id):
         return Response(
             {
                 'success':True,
-                'data':serializer.data,
-            }
+                'data':serializer.data
+            }, status=status.HTTP_200_OK
         )
 
 
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAdminUser])
 def update_book_details_view(request, book_isbn):
-    try:
-        book = Book.objects.get(isbn=book_isbn)
-    except Book.DoesNotExist:
-        return Response(
-            {
-                'message':'The book does not exist'
-            }
-        )
-
     if request.method == 'PUT' or request.method == 'PATCH':
-        serializer = UpdateBookSerializer(book, data=request.data, partial=True)
+        book = get_book(book_isbn)
+
+        serializer = BookSerializer(book, data=request.data, partial=True)
 
         if serializer.is_valid():
             serializer.save()
@@ -113,9 +104,7 @@ def update_book_details_view(request, book_isbn):
             return Response(
                 {
                     'success':True,
-                    'data':serializer.data,
-                    'author_id':book.author.id,
-                    'author_name':book.author.name,
+                    'data':serializer.data
                 }, status=status.HTTP_201_CREATED
             )
         return Response(
@@ -129,14 +118,7 @@ def update_book_details_view(request, book_isbn):
 @api_view(['DELETE'])
 @permission_classes([IsAdminUser])
 def delete_book_view(request, book_isbn):
-    try:
-        book = Book.objects.get(isbn=book_isbn)
-    except Book.DoesNotExist:
-        return Response(
-            {
-                'message':'This book does not exist'
-            }, status=status.HTTP_404_NOT_FOUND
-        )
+    book = get_book(book_isbn)
 
     if request.method == 'DELETE':
         book.delete()

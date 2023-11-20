@@ -12,8 +12,10 @@ class TestModels(APITestCase):
         )
         self.assertIsInstance(user, User)
         self.assertEqual(user.email, 'user@email.com')
+        self.assertEqual(user.username, 'user')
         self.assertFalse(user.is_superuser)
-
+        self.assertEqual(str(user), 'user')
+        
 
     def test_raises_error_with_message_when_email_is_not_supplied(self):
         with self.assertRaisesMessage(ValueError, "The email is required"):
