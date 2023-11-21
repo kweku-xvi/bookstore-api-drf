@@ -111,3 +111,5 @@ def delete_author_view(request, author_id):
                 'message':'Author deleted!'
             }, status=status.HTTP_204_NO_CONTENT
         )
+
+        
