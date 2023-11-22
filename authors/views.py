@@ -1,5 +1,6 @@
 from .models import Author
 from .serializers import CreateAuthorSerializer, AuthorSerializer
+from django.db.models import Q
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes,permission_classes
@@ -112,4 +113,57 @@ def delete_author_view(request, author_id):
             }, status=status.HTTP_204_NO_CONTENT
         )
 
+
+@api_view(['GET'])
+@authentication_classes([])
+def filter_authors_by_genre_view(request):
+    if request.method == 'GET':
+        authors = Author.objects.all()
+        genre = request.query_params.get('genre')
+
+        if genre:
+            authors = authors.filter(genre__iexact=genre)
+        else:
+            return Response(
+                {
+                    'error':'Please provide a filter query'
+                }, status=status.HTTP_400_BAD_REQUEST
+            )
         
+        serializer = AuthorSerializer(authors, many=True)
+
+        return Response(
+            {
+                'success':True,
+                'data':serializer.data
+            }, status=status.HTTP_200_OK
+        )
+
+
+@api_view(['GET'])
+@authentication_classes([])
+def search_authors_by_name_or_genre_view(request):
+    if request.method == 'GET':
+        query = request.query_params.get('query')
+
+        if not query:
+            return Response (
+                {
+                    'error':'Please provide search query'
+                }, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        authors = Author.objects.filter(
+            Q(name__icontains=query) |
+            Q(genre__icontains=query)
+        )
+
+        serializer = AuthorSerializer(authors, many=True)
+
+        return Response(
+            {
+                'success':True,
+                'message':'Below are your search results',
+                'data':serializer.data
+            }, status=status.HTTP_200_OK
+        )
