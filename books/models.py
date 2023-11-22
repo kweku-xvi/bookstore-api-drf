@@ -22,6 +22,7 @@ class Book(models.Model):
     cover_image = models.ImageField(blank=True, null=True)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    genre = models.CharField(max_length=255, blank=True, null=True, default='Other')
 
     def __str__(self):
         return self.name
