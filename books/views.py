@@ -1,6 +1,7 @@
 from .models import Book
 from .serializers import BookSerializer
 from authors.models import Author
+from django.db.models import Q
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -128,4 +129,65 @@ def delete_book_view(request, book_isbn):
                 'success':True,
                 'message':'The book has been deleted'
             }, status=status.HTTP_204_NO_CONTENT
+        )
+
+
+@api_view(['GET'])
+@authentication_classes([])
+def filter_books_by_genre_or_rating_view(request):
+    if request.method == 'GET':
+        books = Book.objects.all()
+        genre = request.query_params.get('genre')
+        rating = request.query_params.get('rating')
+
+        if genre and not rating:
+            books = books.filter(genre__iexact=genre)
+        elif rating and not genre:
+            books = books.filter(rating__iexact=rating)
+        elif rating and genre:
+            books = books.filter(genre__iexact=genre, rating__iexact=rating)
+        else:
+            return Response(
+                {
+                    'error':'Please provide filter query'
+                }, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = BookSerializer(books, many=True)
+
+        return Response(
+            {
+                'success':True,
+                'data':serializer.data
+            }, status=status.HTTP_200_OK
+        )
+
+
+@api_view(['GET'])
+@authentication_classes([])
+def search_books_view(request):
+    if request.method == 'GET':
+        query = request.query_params.get('query')
+
+        if not query:
+            return Response(
+                {
+                    'error':'Please provide a search query'
+                }, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        books = Book.objects.filter(
+            Q(name__icontains=query) |
+            Q(author__name__icontains=query) |
+            Q(genre__icontains=query)
+        )
+
+        serializer = BookSerializer(books, many=True)
+
+        return Response(
+            {
+                'success':True,
+                'message':'Below are your search results',
+                'data':serializer.data
+            }, status=status.HTTP_200_OK
         )
