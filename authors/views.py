@@ -1,5 +1,5 @@
 from .models import Author
-from .serializers import CreateAuthorSerializer, AuthorSerializer
+from .serializers import AuthorSerializer
 from django.db.models import Q
 from django.shortcuts import render
 from rest_framework import status
@@ -8,11 +8,23 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 
+def get_author_function(author_id):
+    try:
+        author = Author.objects.get(id=author_id)
+        return author
+    except Author.DoesNotExist:
+        return Response(
+                {
+                    'error':'The author does not  exist'
+                }, status=status.HTTP_404_NOT_FOUND
+            )
+    
+
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def add_author_view(request):
     if request.method == 'POST':
-        serializer = CreateAuthorSerializer(data=request.data)
+        serializer = AuthorSerializer(data=request.data)
 
         if serializer.is_valid():
             serializer.save()
@@ -33,13 +45,10 @@ def add_author_view(request):
 
 @api_view(['GET'])
 @authentication_classes([])
-def retrieve_author_view(request, author_id): # retrieves specific author
-    try:
-        author = Author.objects.get(id=author_id)
-    except Author.DoesNotExist:
-        return Response({'error':'The author does not  exist'}, status=status.HTTP_404_NOT_FOUND)
-    
+def retrieve_author_view(request, author_id): # retrieves specific author    
     if request.method == 'GET':
+        author = get_author_function(author_id)
+
         serializer = AuthorSerializer(author)
 
         return Response(
@@ -70,12 +79,9 @@ def retrieve_all_authors(request): # retrieves all authors
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAdminUser])
 def update_author_view(request, author_id):
-    try:
-        author = Author.objects.get(id=author_id)
-    except Author.DoesNotExist:
-        return Response({'error':'The author does not  exist'}, status=status.HTTP_404_NOT_FOUND)
-
     if request.method == 'PUT' or request.method == 'PATCH':
+        author = get_author_function(author_id)
+
         serializer = AuthorSerializer(author, data=request.data, partial=True)
 
         if serializer.is_valid():
@@ -98,10 +104,7 @@ def update_author_view(request, author_id):
 @api_view(['DELETE'])
 @permission_classes([IsAdminUser])
 def delete_author_view(request, author_id):
-    try:
-        author = Author.objects.get(id=author_id)
-    except Author.DoesNotExist:
-        return Response({'error':'The author does not  exist'}, status=status.HTTP_404_NOT_FOUND)
+    author = get_author_function(author_id)
 
     if request.method  == 'DELETE':
         author.delete()
