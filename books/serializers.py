@@ -7,7 +7,7 @@ class BookSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Book
-        fields = ['isbn', 'name', 'description', 'format', 'edition', 'date_published', 'cover_image', 'genre', 'rating', 'author']
+        fields = ['isbn', 'name', 'cover_image','description', 'edition', 'format', 'date_published', 'genre', 'rating', 'author','price', 'language', 'quantity']
     
     def get_author(self, obj):
         return obj.author.name if obj.author else None
