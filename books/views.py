@@ -73,24 +73,6 @@ def retrieve_book_view(request, book_isbn):
         )
 
 
-@api_view(['GET'])
-@authentication_classes([])
-def retrieve_books_by_author(request, author_id):
-    if request.method == 'GET':
-        author = get_author(author_id)
-
-        books = Book.objects.filter(author=author)
-
-        serializer = BookSerializer(books, many=True)
-
-        return Response(
-            {
-                'success':True,
-                'data':serializer.data
-            }, status=status.HTTP_200_OK
-        )
-
-
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAdminUser])
 def update_book_details_view(request, book_isbn):
