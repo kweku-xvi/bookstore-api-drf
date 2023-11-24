@@ -1,5 +1,7 @@
 from .models import Author
 from .serializers import AuthorSerializer
+from books.models import Book
+from books.serializers import BookSerializer
 from django.db.models import Q
 from django.shortcuts import render
 from rest_framework import status
@@ -8,7 +10,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 
-def get_author_function(author_id):
+def get_author(author_id):
     try:
         author = Author.objects.get(id=author_id)
         return author
@@ -47,9 +49,27 @@ def add_author_view(request):
 @authentication_classes([])
 def retrieve_author_view(request, author_id): # retrieves specific author    
     if request.method == 'GET':
-        author = get_author_function(author_id)
+        author = get_author(author_id)
 
         serializer = AuthorSerializer(author)
+
+        return Response(
+            {
+                'success':True,
+                'data':serializer.data
+            }, status=status.HTTP_200_OK
+        )
+
+
+@api_view(['GET'])
+@authentication_classes([])
+def retrieve_books_by_author(request, author_id):
+    if request.method == 'GET':
+        author = get_author(author_id)
+
+        books = Book.objects.filter(author=author)
+
+        serializer = BookSerializer(books, many=True)
 
         return Response(
             {
@@ -80,7 +100,7 @@ def retrieve_all_authors(request): # retrieves all authors
 @permission_classes([IsAdminUser])
 def update_author_view(request, author_id):
     if request.method == 'PUT' or request.method == 'PATCH':
-        author = get_author_function(author_id)
+        author = get_author(author_id)
 
         serializer = AuthorSerializer(author, data=request.data, partial=True)
 
@@ -104,7 +124,7 @@ def update_author_view(request, author_id):
 @api_view(['DELETE'])
 @permission_classes([IsAdminUser])
 def delete_author_view(request, author_id):
-    author = get_author_function(author_id)
+    author = get_author(author_id)
 
     if request.method  == 'DELETE':
         author.delete()
