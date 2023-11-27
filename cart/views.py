@@ -61,6 +61,7 @@ def get_all_books_in_the_cart(request):
             }, status=status.HTTP_200_OK
         )
 
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def remove_book_from_cart(request, book_isbn):
