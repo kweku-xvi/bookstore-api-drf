@@ -1,11 +1,17 @@
+import random, string
 from .models import Cart, CartItem
 from .serializers import CartItemSerializer
 from books.models import Book
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from payments.utils import initialize_transactions
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+
+
+def generate_order_id():
+    return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(15))
 
 
 def get_book(book_isbn):
@@ -62,12 +68,30 @@ def get_all_books_in_the_cart(request):
         )
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_cart_item(request, cart_id):
+    if request.method == 'GET':
+        user = request.user
+        cart = get_object_or_404(Cart, user=user)
+        cart_item = cart.items.get(id=cart_id)
+
+        serializer = CartItemSerializer(cart_item)
+
+        return Response(
+            {
+                'success':True,
+                'data':serializer.data
+            }, status=status.HTTP_200_OK
+        )
+
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def remove_book_from_cart(request, book_isbn):
-    book = get_book(book_isbn=book_isbn)
-
-    cart_item = CartItem.objects.get(book=book)
+def remove_cart_item(request, cart_id):
+    user = request.user
+    cart = get_object_or_404(Cart, user=user)
+    cart_item = cart.items.get(id=cart_id)
 
     if request.method == 'DELETE':
         cart_item.delete()
@@ -77,4 +101,48 @@ def remove_book_from_cart(request, book_isbn):
                 'success':True,
                 'message':'Item has been successfully deleted'
             }, status=status.HTTP_204_NO_CONTENT
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def order_particular_cart_item(request, cart_id):
+    if request.method == 'POST':
+        user = request.user
+        cart = get_object_or_404(Cart, user=user)
+        cart_item = cart.items.get(id=cart_id)
+
+        price = cart_item.quantity * cart_item.book.price
+
+        transaction = initialize_transactions(email=user.email, amount=str(price * 100), order_id=generate_order_id())
+
+        return Response (
+            {
+                'success':True,
+                'transaction_url':transaction,
+            }
+        )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def order_all_items_in_cart(request):
+    if request.method == 'POST':
+        price = 0
+
+        user = request.user
+        cart = get_object_or_404(Cart, user=user)
+        cart_items = cart.items.all()
+
+        
+        for book in cart_items:
+            price += book.quantity * book.book.price
+
+
+        transaction = initialize_transactions(email=user.email, amount=str(price * 100), order_id=generate_order_id())
+
+        return Response (
+            {
+                'success':True,
+                'transaction_url':transaction,
+            }
         )
