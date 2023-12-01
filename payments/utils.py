@@ -6,7 +6,6 @@ load_dotenv()
 
 
 KEY = os.getenv('PAYSTACK_SECRET_KEY')
-print(KEY)
 
 
 def initialize_transactions(email:str, amount:str, order_id:str):
@@ -29,8 +28,3 @@ def initialize_transactions(email:str, amount:str, order_id:str):
     else:
         return response.json()['message']
     
-
-
-
-
-    pk_test_8d668625807df69f75b45f6bcc8be316ae98c416
