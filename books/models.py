@@ -24,7 +24,7 @@ class Book(models.Model):
     cover_image = models.ImageField(blank=True, null=True)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    price = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=5.00)
+    price = models.DecimalField(max_digits=14, decimal_places=2, default=5.00)
     language = models.CharField(max_length=255, default='English')
     remaining_books = models.IntegerField(default=0, validators=[MinValueValidator(limit_value=0)])
     genre = models.CharField(max_length=255, blank=True, null=True, default='Other')
