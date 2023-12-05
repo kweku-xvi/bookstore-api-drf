@@ -2,7 +2,6 @@ import uuid
 from authors.models import Author
 from django.core.validators import MinValueValidator
 from django.db import models
-from djmoney.models.fields import MoneyField
 from authors.models import Author
 
 
@@ -13,11 +12,11 @@ class Book(models.Model):
         ('Ebook', 'Ebook'),
         ('Other', 'Other')
     ]
-
-    isbn = models.UUIDField(unique=True, primary_key=True, default=uuid.uuid4)
+    id = models.UUIDField(unique=True, primary_key=True, default=uuid.uuid4)
+    isbn = models.CharField(max_length=13, unique=True)
     name = models.CharField(max_length=255)
     description = models.TextField()
-    rating = models.IntegerField(default=0)
+    rating = models.IntegerField(default=1)
     format = models.CharField(max_length=255, choices=BOOK_FORMAT, default='Other')
     edition = models.CharField(max_length=255)
     date_published = models.DateField()
