@@ -1,6 +1,4 @@
-import jwt
 import uuid
-from datetime import datetime, timedelta
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
@@ -37,6 +35,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, blank=False, null=False)
     date_of_birth = models.DateField(blank=False, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    is_verified = models.BooleanField(default=False)
 
     objects = MyUserManager()
 
@@ -51,15 +50,4 @@ class User(AbstractUser):
             self.id = str(uuid.uuid4())[:8]
         super().save(*args, **kwargs)
 
-    def token(self):
-        token = jwt.encode(
-            {
-                'username':self.username,
-                'email':self.email,
-                'exp':datetime.utcnow() + timedelta(hours=3)
-            },
-            settings.SECRET_KEY,
-            algorithm='HS256'
-        )
-
-        return token
+    
