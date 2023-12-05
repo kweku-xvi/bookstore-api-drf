@@ -1,6 +1,7 @@
-from rest_framework import serializers
 from .models import User
-
+from django.contrib.auth import authenticate
+from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
 
 class RegisterUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=50, write_only=True)
@@ -33,15 +34,35 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         return user
 
 
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(max_length=255, min_length=8)
 
-class LoginUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(max_length=50, write_only=True)
 
-    class Meta:
-        model = User
-        fields = ['id' ,'first_name', 'last_name', 'username', 'email', 'date_of_birth', 'created_at','password', 'token']
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
 
-        read_only_fields = ['token']
+        user = authenticate(username=email, password=password)
+
+        if not user:
+            raise serializers.ValidationError('Invalid credentials', code='authentication')
+
+        attrs['user'] = user
+        return attrs
+
+    
+    def generate_jwt_tokens(self, attrs):
+        user = attrs.get('user')
+
+        refresh_token = RefreshToken.for_user(user)
+
+        tokens = {
+            'refresh':str(refresh_token),
+            'access':str(refresh_token.access_token)
+        }
+
+        return tokens
 
 
 class UsersSerializer(serializers.ModelSerializer):
