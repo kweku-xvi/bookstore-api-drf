@@ -46,19 +46,18 @@ def add_book_view(request, author_id):
             return Response(
                 {
                     'success':True,
-                    'data':serializer.data,
+                    'book':serializer.data,
                 }, status=status.HTTP_201_CREATED
             )
         return Response(
             {
                 'success':False,
-                'data':serializer.errors
+                'message':serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST
         )
 
 
 @api_view(['GET'])
-@authentication_classes([])
 def retrieve_book_view(request, book_isbn):
     if request.method == 'GET':
         book = get_book(book_isbn)
@@ -68,7 +67,7 @@ def retrieve_book_view(request, book_isbn):
         return Response(
             {
                 'success':True,
-                'data':serializer.data,
+                'book':serializer.data,
             }, status=status.HTTP_200_OK
         )
 
@@ -87,13 +86,13 @@ def update_book_details_view(request, book_isbn):
             return Response(
                 {
                     'success':True,
-                    'data':serializer.data
+                    'book':serializer.data
                 }, status=status.HTTP_201_CREATED
             )
         return Response(
             {
                 'success':False,
-                'data':serializer.errors
+                'message':serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -115,38 +114,37 @@ def delete_book_view(request, book_isbn):
 
 
 @api_view(['GET'])
-@authentication_classes([])
 def filter_books_by_genre_or_rating_view(request):
     if request.method == 'GET':
         books = Book.objects.all()
+
         genre = request.query_params.get('genre')
         rating = request.query_params.get('rating')
 
-        if genre and not rating:
-            books = books.filter(genre__iexact=genre)
-        elif rating and not genre:
-            books = books.filter(rating__iexact=rating)
-        elif rating and genre:
-            books = books.filter(genre__iexact=genre, rating__iexact=rating)
-        else:
+        if not genre and not rating:
             return Response(
                 {
-                    'error':'Please provide filter query'
+                    'success':False,
+                    'message':'Please provide a filter query'
                 }, status=status.HTTP_400_BAD_REQUEST
             )
+
+        if genre:
+            books = books.filter(genre__iexact=genre)
+        if rating:
+            books = books.filter(rating__iexact=rating)
 
         serializer = BookSerializer(books, many=True)
 
         return Response(
             {
                 'success':True,
-                'data':serializer.data
+                'book(s)':serializer.data
             }, status=status.HTTP_200_OK
         )
 
 
 @api_view(['GET'])
-@authentication_classes([])
 def search_books_view(request):
     if request.method == 'GET':
         query = request.query_params.get('query')
@@ -154,7 +152,8 @@ def search_books_view(request):
         if not query:
             return Response(
                 {
-                    'error':'Please provide a search query'
+                    'success':False,
+                    'message':'Please provide a search query'
                 }, status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -170,6 +169,6 @@ def search_books_view(request):
             {
                 'success':True,
                 'message':'Below are your search results',
-                'data':serializer.data
+                'book(s)':serializer.data
             }, status=status.HTTP_200_OK
         )
