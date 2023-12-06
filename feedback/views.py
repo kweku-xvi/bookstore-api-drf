@@ -1,12 +1,13 @@
 from .models import Feedback
 from .serializers import FeedbackSerializer
+from accounts.permissions import IsVerified
 from books.models import Book
 from datetime import timedelta
 from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 
@@ -35,7 +36,7 @@ def get_feedback(feedback_id):
     
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsVerified])
 def add_feedback_view(request, book_isbn): 
     if request.method == 'POST':
         book = get_book(book_isbn)
@@ -60,7 +61,6 @@ def add_feedback_view(request, book_isbn):
 
 
 @api_view(['GET'])
-@authentication_classes([])
 def get_feedback_view(request, feedback_id):
     if request.method == 'GET':
         feedback = get_feedback(feedback_id)
@@ -109,7 +109,6 @@ def delete_feedback_view(request, feedback_id):
 
 
 @api_view(['GET'])
-@authentication_classes([])
 def feedback_within_last_30_days(request, book_isbn):
     time_frame = timezone.now() - timedelta(days=30)
 
@@ -129,7 +128,6 @@ def feedback_within_last_30_days(request, book_isbn):
 
 
 @api_view(['GET'])
-@authentication_classes([])
 def feedback_within_last_3_months(request, book_isbn):
     time_frame = timezone.now() - timedelta(days=90)
 
@@ -150,7 +148,6 @@ def feedback_within_last_3_months(request, book_isbn):
 
         
 @api_view(['GET'])
-@authentication_classes([])
 def feedback_within_last_6_months(request, book_isbn):
     time_frame = timezone.now() - timedelta(days=180)
 
@@ -170,7 +167,6 @@ def feedback_within_last_6_months(request, book_isbn):
 
 
 @api_view(['GET'])
-@authentication_classes([])
 def feedback_within_last_year(request, book_isbn):
     time_frame = timezone.now() - timedelta(days=365)
 
