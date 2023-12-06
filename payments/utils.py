@@ -1,5 +1,5 @@
 import requests
-import os
+import os, random, string
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -8,7 +8,7 @@ load_dotenv()
 KEY = os.getenv('PAYSTACK_SECRET_KEY')
 
 
-def initialize_transactions(email:str, amount:str, order_id:str):
+def initialize_transactions(email:str, amount:str, payment_id:str):
     headers = {
         'Authorization': f"Bearer {KEY}",
     }
@@ -16,7 +16,7 @@ def initialize_transactions(email:str, amount:str, order_id:str):
     data = {
         'email':email,
         'amount':amount,
-        'reference':order_id,
+        'reference':payment_id,
     }
 
     url="https://api.paystack.co/transaction/initialize"
@@ -28,3 +28,22 @@ def initialize_transactions(email:str, amount:str, order_id:str):
     else:
         return response.json()['message']
     
+
+def verify_payment(reference):
+    headers = {
+        'Authorization': f'Bearer {KEY}',
+    }
+
+    verify_payment_url = f'https://api.paystack.co/transaction/verify/{reference}'
+
+    response = requests.get(verify_payment_url, headers=headers)
+
+    if response.status_code == 200:
+        payment_data = response.json()['data']
+        return payment_data
+    else:
+        return None
+
+
+def generate_payment_id():
+    return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(15))
