@@ -1,10 +1,12 @@
 from django.shortcuts import render
+from django.core.cache import cache
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from .utils import initialize_transactions, verify_payment,  generate_payment_id
 from .models import Payment
+from accounts.models import User
 import json, random, string
 from orders.models import Order
 from accounts.permissions import IsVerified
@@ -20,14 +22,6 @@ def checkout(request, order_id):
             order = Order.objects.get(order_id=order_id)
 
             transaction = initialize_transactions(email=email, amount=str(100 * order.total_amount), payment_id=generate_payment_id())
-
-            payment_data = verify_payment(transaction)
-            if payment_data:
-                payment = Payment.objects.create(
-                    user=user,
-                    order=order,
-                    amount=100 * order.total_amount,
-                )
 
             return Response(
                     {
@@ -55,6 +49,13 @@ def payment_webhook(request):
 
     if event == 'charge.success':
         reference = data['reference']
+
+        payment = Payment.objects.create(
+            amount=data['amount'] / 100,
+            user=User.objects.get(email=data['customer']['email']),
+            order=None,
+            paid_at=data['paid_at']
+        )
 
     return Response(
         {
