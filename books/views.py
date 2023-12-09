@@ -172,3 +172,17 @@ def search_books_view(request):
                 'book(s)':serializer.data
             }, status=status.HTTP_200_OK
         )
+
+@api_view(['GET'])
+def get_all_books_view(request):
+    if request.method == 'GET':
+        books = Book.objects.all()
+
+        serializer = BookSerializer(books, many=True)
+
+        return Response(
+            {
+                'success':True,
+                'book(s)':serializer.data
+            }, status=status.HTTP_200_OK
+        )
